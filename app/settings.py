@@ -68,8 +68,8 @@ class Settings(BaseSettings):
     sentry_dsn: Optional[str] = None
     sentry_sample_rate: float = 1.0
 
-    enable_taskiq: bool = True
-    enable_sqlite: bool = True
+    enable_taskiq: bool = False
+    enable_sqlite: bool = False
 
     @property
     def db_url(self) -> URL:
