@@ -1,5 +1,6 @@
 from importlib import metadata
 from pathlib import Path
+import os
 
 from fastapi import FastAPI
 from fastapi.responses import UJSONResponse
@@ -40,3 +41,9 @@ def get_app() -> FastAPI:
     return app
 
 app = get_app()
+
+if __name__ == "__main__":
+    import uvicorn
+
+    port = int(os.getenv("PORT", 8000))  # Use the port from the environment variable, default to 8000
+    uvicorn.run("app.web.application:app", host="0.0.0.0", port=port)
