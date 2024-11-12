@@ -31,7 +31,7 @@ taskiq-aio-pika = "^0"
 taskiq-redis = "^1"
 redis = {version = "^5.0.7", extras = ["hiredis"]}
 httpx = "^0.27.2"
-
+gunicorn = "*"
 
 
 [tool.poetry.group.dev.dependencies]
