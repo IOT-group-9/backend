@@ -11,7 +11,6 @@ from app.web.lifespan import lifespan_setup
 
 APP_ROOT = Path(__file__).parent.parent
 
-
 def get_app() -> FastAPI:
     """
     Get FastAPI application.
@@ -39,3 +38,5 @@ def get_app() -> FastAPI:
     app.mount("/static", StaticFiles(directory=APP_ROOT / "static"), name="static")
 
     return app
+
+app = get_app()
