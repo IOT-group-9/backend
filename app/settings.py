@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     These parameters can be configured
     with environment variables.
     """
-
+    root_directory: Path = Path(__file__).parent.parent
     host: str = "127.0.0.1"
     port: int = 8000
     # quantity of workers for uvicorn
@@ -123,7 +123,7 @@ class Settings(BaseSettings):
         )
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=root_directory / ".env",
         env_prefix="APP_",
         env_file_encoding="utf-8",
     )

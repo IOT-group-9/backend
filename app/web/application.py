@@ -40,10 +40,10 @@ def get_app() -> FastAPI:
 
     return app
 
-app = get_app()
+# app = get_app()
 
-if __name__ == "__main__":
-    import uvicorn
+# if __name__ == "__main__":
+#     import uvicorn
 
-    port = int(os.getenv("PORT", 8000))  # Use the port from the environment variable, default to 8000
-    uvicorn.run("app.web.application:app", host="0.0.0.0", port=port)
+#     port = int(os.getenv("PORT", 8000))  # Use the port from the environment variable, default to 8000
+#     uvicorn.run("app.web.application:app", host="0.0.0.0", port=port)

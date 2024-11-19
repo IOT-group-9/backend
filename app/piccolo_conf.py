@@ -6,7 +6,7 @@ from app.settings import settings
 
 DB: PostgresEngine | SQLiteEngine
 if settings.enable_sqlite:
-    DB = SQLiteEngine()
+    DB = SQLiteEngine(path=settings.root_directory / "piccolo.sqlite")
 else:
     DB = PostgresEngine(
         config={
