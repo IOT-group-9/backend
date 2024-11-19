@@ -1,9 +1,9 @@
 services:
-  api: &main_app
+  backend-api: &main_app
     build:
       context: .
       dockerfile: ./Dockerfile
-    image: app:${app_VERSION:-latest}
+    image: qazer25/iot-backend:${app_VERSION:-latest}
     restart: always
     env_file:
       - .env
@@ -16,14 +16,15 @@ services:
         condition: service_healthy
     environment:
       APP_HOST: 0.0.0.0
-      APP_DB_HOST: app-db
+      APP_DB_HOST: db
       APP_DB_PORT: 5432
       APP_DB_USER: app
       APP_DB_PASS: app
       APP_DB_BASE: app
-      APP_RABBIT_HOST: app-rmq
-      APP_REDIS_HOST: app-redis
+      APP_RABBIT_HOST: rmq
+      APP_REDIS_HOST: redis
       APP_ENABLE_TASKIQ: True
+      APP_ENABLE_SQLITE: False
     ports:
       - "8000:8000"
   taskiq-worker:
@@ -38,7 +39,7 @@ services:
 
   db:
     image: postgres:16.3-bullseye
-    hostname: app-db
+    hostname: db
     environment:
       POSTGRES_PASSWORD: "app"
       POSTGRES_USER: "app"
@@ -51,17 +52,20 @@ services:
       interval: 2s
       timeout: 3s
       retries: 40
+    ports:
+      - "5432:5432"
 
-  migrator:
-    image: app:${app_VERSION:-latest}
+  backend-migrator:
+    image: qazer25/iot-backend:${app_VERSION:-latest}
     restart: "no"
     command: piccolo migrations forwards all
     environment:
-      app_DB_HOST: app-db
+      app_DB_HOST: db
       app_DB_PORT: 5432
       app_DB_USER: app
       app_DB_PASS: app
       app_DB_BASE: app
+      APP_ENABLE_SQLITE: False
       PICCOLO_CONF: "app.piccolo_conf"
     depends_on:
       db:
@@ -77,9 +81,11 @@ services:
       interval: 1s
       timeout: 3s
       retries: 50
+    ports:
+      - "6379:6379"
   rmq:
     image: rabbitmq:3.9.16-alpine
-    hostname: "app-rmq"
+    hostname: "rmq"
     restart: always
     environment:
       RABBITMQ_DEFAULT_USER: "guest"
@@ -90,7 +96,8 @@ services:
       interval: 3s
       timeout: 3s
       retries: 50
-
+    ports:
+      - "5672:5672"
 volumes:
   app-db-data:
     name: app-db-data
