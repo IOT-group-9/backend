@@ -18,10 +18,10 @@ class Map(Table):
 
 class MapSlot(Table):
     map = ForeignKey(references=Map)
-    x1 = Varchar()
-    y1 = Varchar()
-    x2 = Varchar()
-    y2 = Varchar()
+    x1 = Integer()
+    y1 = Integer()
+    x2 = Integer()
+    y2 = Integer()
     arduino = ForeignKey(references=Arduino, null=True)
     occupied = Boolean(default=False)
 

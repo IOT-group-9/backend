@@ -49,7 +49,7 @@ class ParkingPlace(Table, tablename="parking_place", schema=None):
     )
 
 
-ID = "2024-11-02T11:26:08:755040"
+ID = "2024-11-21T12:06:37:920946"
 VERSION = "1.22.0"
 DESCRIPTION = ""
 
@@ -60,18 +60,6 @@ async def forwards():
     )
 
     manager.add_table(
-        class_name="Arduino", tablename="arduino", schema=None, columns=None
-    )
-
-    manager.add_table(
-        class_name="Map", tablename="map", schema=None, columns=None
-    )
-
-    manager.add_table(
-        class_name="MapSlot", tablename="map_slot", schema=None, columns=None
-    )
-
-    manager.add_table(
         class_name="ParkingPlace",
         tablename="parking_place",
         schema=None,
@@ -79,14 +67,26 @@ async def forwards():
     )
 
     manager.add_table(
+        class_name="Map", tablename="map", schema=None, columns=None
+    )
+
+    manager.add_table(
         class_name="Display", tablename="display", schema=None, columns=None
     )
 
+    manager.add_table(
+        class_name="MapSlot", tablename="map_slot", schema=None, columns=None
+    )
+
+    manager.add_table(
+        class_name="Arduino", tablename="arduino", schema=None, columns=None
+    )
+
     manager.add_column(
-        table_class_name="Arduino",
-        tablename="arduino",
-        column_name="ip_address",
-        db_column_name="ip_address",
+        table_class_name="ParkingPlace",
+        tablename="parking_place",
+        column_name="location",
+        db_column_name="location",
         column_class_name="Varchar",
         column_class=Varchar,
         params={
@@ -94,8 +94,29 @@ async def forwards():
             "default": "",
             "null": False,
             "primary_key": False,
-            "unique": True,
-            "index": True,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="ParkingPlace",
+        tablename="parking_place",
+        column_name="no_of_levels",
+        db_column_name="no_of_levels",
+        column_class_name="Integer",
+        column_class=Integer,
+        params={
+            "default": 0,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
             "index_method": IndexMethod.btree,
             "choices": None,
             "db_column_name": None,
@@ -234,6 +255,52 @@ async def forwards():
     )
 
     manager.add_column(
+        table_class_name="Display",
+        tablename="display",
+        column_name="connection",
+        db_column_name="connection",
+        column_class_name="Varchar",
+        column_class=Varchar,
+        params={
+            "length": 255,
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Display",
+        tablename="display",
+        column_name="parking_place",
+        db_column_name="parking_place",
+        column_class_name="ForeignKey",
+        column_class=ForeignKey,
+        params={
+            "references": ParkingPlace,
+            "on_delete": OnDelete.cascade,
+            "on_update": OnUpdate.cascade,
+            "target_column": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
         table_class_name="MapSlot",
         tablename="map_slot",
         column_name="map",
@@ -262,11 +329,10 @@ async def forwards():
         tablename="map_slot",
         column_name="x1",
         db_column_name="x1",
-        column_class_name="Varchar",
-        column_class=Varchar,
+        column_class_name="Integer",
+        column_class=Integer,
         params={
-            "length": 255,
-            "default": "",
+            "default": 0,
             "null": False,
             "primary_key": False,
             "unique": False,
@@ -284,11 +350,10 @@ async def forwards():
         tablename="map_slot",
         column_name="y1",
         db_column_name="y1",
-        column_class_name="Varchar",
-        column_class=Varchar,
+        column_class_name="Integer",
+        column_class=Integer,
         params={
-            "length": 255,
-            "default": "",
+            "default": 0,
             "null": False,
             "primary_key": False,
             "unique": False,
@@ -306,11 +371,10 @@ async def forwards():
         tablename="map_slot",
         column_name="x2",
         db_column_name="x2",
-        column_class_name="Varchar",
-        column_class=Varchar,
+        column_class_name="Integer",
+        column_class=Integer,
         params={
-            "length": 255,
-            "default": "",
+            "default": 0,
             "null": False,
             "primary_key": False,
             "unique": False,
@@ -328,11 +392,10 @@ async def forwards():
         tablename="map_slot",
         column_name="y2",
         db_column_name="y2",
-        column_class_name="Varchar",
-        column_class=Varchar,
+        column_class_name="Integer",
+        column_class=Integer,
         params={
-            "length": 255,
-            "default": "",
+            "default": 0,
             "null": False,
             "primary_key": False,
             "unique": False,
@@ -391,10 +454,10 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="ParkingPlace",
-        tablename="parking_place",
-        column_name="location",
-        db_column_name="location",
+        table_class_name="Arduino",
+        tablename="arduino",
+        column_name="ip_address",
+        db_column_name="ip_address",
         column_class_name="Varchar",
         column_class=Varchar,
         params={
@@ -402,75 +465,8 @@ async def forwards():
             "default": "",
             "null": False,
             "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="ParkingPlace",
-        tablename="parking_place",
-        column_name="no_of_levels",
-        db_column_name="no_of_levels",
-        column_class_name="Integer",
-        column_class=Integer,
-        params={
-            "default": 0,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="Display",
-        tablename="display",
-        column_name="connection",
-        db_column_name="connection",
-        column_class_name="Varchar",
-        column_class=Varchar,
-        params={
-            "length": 255,
-            "default": "",
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="Display",
-        tablename="display",
-        column_name="parking_place",
-        db_column_name="parking_place",
-        column_class_name="ForeignKey",
-        column_class=ForeignKey,
-        params={
-            "references": ParkingPlace,
-            "on_delete": OnDelete.cascade,
-            "on_update": OnUpdate.cascade,
-            "target_column": None,
-            "null": True,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
+            "unique": True,
+            "index": True,
             "index_method": IndexMethod.btree,
             "choices": None,
             "db_column_name": None,
