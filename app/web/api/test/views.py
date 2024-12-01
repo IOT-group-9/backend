@@ -50,9 +50,9 @@ async def initialize_database():
             for i, arduino in enumerate(created_arduinos):
                 slot = await MapSlot.objects().create(
                     map=map_obj.id,
-                    x1=str(i*10),
+                    x1=i*10,
                     y1="0",
-                    x2=str((i+1)*10),
+                    x2=(i+1)*10,
                     y2="10",
                     occupied=False,
                     arduino=arduino.id
