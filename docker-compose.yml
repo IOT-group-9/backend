@@ -25,6 +25,7 @@ services:
       APP_REDIS_HOST: redis
       APP_ENABLE_TASKIQ: True
       APP_ENABLE_SQLITE: False
+      APP_LISTENING_URL: http://broadcast-backend-api.broadcast-backend:8000
     ports:
       - "8000:8000"
   taskiq-worker:
@@ -44,16 +45,20 @@ services:
       POSTGRES_PASSWORD: "app"
       POSTGRES_USER: "app"
       POSTGRES_DB: "app"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     volumes:
-      - app-db-data:/var/lib/postgresql/data
+      - app-db-prod-data:/var/lib/postgresql/data
     restart: always
-    healthcheck:
-      test: pg_isready -U app
-      interval: 2s
-      timeout: 3s
-      retries: 40
+    # healthcheck:
+    #   test: pg_isready -U app
+    #   interval: 2s
+    #   timeout: 3s
+    #   retries: 40
     ports:
       - "5432:5432"
+    labels:
+      kompose.service.healthcheck.readiness.tcp_port: 5432
+      kompose.volume.size: 1Gi
 
   backend-migrator:
     image: qazer25/iot-backend:${app_VERSION:-latest}
@@ -76,13 +81,15 @@ services:
     restart: always
     environment:
       ALLOW_EMPTY_PASSWORD: "yes"
-    healthcheck:
-      test: redis-cli ping
-      interval: 1s
-      timeout: 3s
-      retries: 50
+    # healthcheck:
+    #   test: redis-cli ping
+    #   interval: 1s
+    #   timeout: 3s
+    #   retries: 50
     ports:
       - "6379:6379"
+    labels:
+      kompose.service.healthcheck.readiness.tcp_port: 6379
   rmq:
     image: rabbitmq:3.9.16-alpine
     hostname: "rmq"
@@ -91,13 +98,15 @@ services:
       RABBITMQ_DEFAULT_USER: "guest"
       RABBITMQ_DEFAULT_PASS: "guest"
       RABBITMQ_DEFAULT_VHOST: "/"
-    healthcheck:
-      test: rabbitmq-diagnostics check_running -q
-      interval: 3s
-      timeout: 3s
-      retries: 50
+    # healthcheck:
+    #   test: rabbitmq-diagnostics check_running -q
+    #   interval: 3s
+    #   timeout: 3s
+    #   retries: 50
     ports:
       - "5672:5672"
+    labels:
+      kompose.service.healthcheck.readiness.tcp_port: 5672
 volumes:
-  app-db-data:
-    name: app-db-data
+  app-db-prod-data:
+    name: app-db-prod-data

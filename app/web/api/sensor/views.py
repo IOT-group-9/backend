@@ -1,11 +1,11 @@
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from piccolo_api.crud.endpoints import PiccoloCRUD
 from piccolo_api.fastapi.endpoints import FastAPIWrapper
 from app.tkq import broker
 from httpx import AsyncClient
 from app.settings import settings
-from app.db.models.models import Arduino, MapSlot
+from app.db.models.models import Arduino, MapSlot, Map
 from .schema import SensorDataInputDTO, SensorDataDTO, ArduinoCreateDTO
 from fastapi.responses import Response
 from typing import Dict, Any
@@ -45,13 +45,20 @@ async def receive_data(data: SensorDataInputDTO):
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 @sensor_router.post("/data/receive_map_slots")
-async def receive_data1(data: Dict[Any, Any]):
+async def receive_data1(request: Request, data:Dict[Any, Any]):
+    devicename = request.headers.get('deviceName')
+    #devicename = "MP1"
+    logging.info(devicename)
     try:
         for key, value in data.items():
             await MapSlot.update(
             {MapSlot.occupied: value}
             ).where(MapSlot.id == int(key))
-        await send_publish_request.kiq()
+        mapslot = await MapSlot.objects().get(MapSlot.arduino.device_id == devicename)
+        logging.info(mapslot)
+        map = await Map.objects().get(Map.id == mapslot.map)
+        logging.info(map.parking_place)
+        await send_publish_request.kiq(map.parking_place, map.level_no)
         return Response()
     except HTTPException as e:
         logging.error(f"HTTPException occurred: {str(e)}")
@@ -66,7 +73,11 @@ async def offline(device_id: str):
     try:
         arduino = await Arduino.objects().get(Arduino.device_id == device_id)
         await MapSlot.update({MapSlot.occupied: "offline"}).where(MapSlot.arduino == arduino)
-        await send_publish_request.kiq()
+        mapslot = await MapSlot.objects().get(MapSlot.arduino == arduino)
+        logging.info(mapslot)
+        map = await Map.objects().get(Map.id == mapslot.map)
+        logging.info(map.parking_place)
+        await send_publish_request.kiq(map.parking_place, map.level_no)
         return Response()
     except HTTPException as e:
         logging.error(f"HTTPException occurred: {str(e)}")
@@ -87,7 +98,7 @@ FastAPIWrapper(
 
 
 @broker.task
-async def send_publish_request():
+async def send_publish_request(parking_place:int, level_no:int):
     async with AsyncClient() as client:
-        await client.get(f"{settings.listening_url}/api/pubsub/publish/1/1")
+        await client.get(f"{settings.listening_url}/api/pubsub/publish/{parking_place}/{level_no}")
     return "done!"
