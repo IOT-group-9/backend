@@ -12,7 +12,7 @@ createsuperuser:
 	(cd app && poetry run piccolo user create --username=aadmin --password=aadmin --email=admin@gmail.com --is_admin=true --is_superuser=true --is_active=true)
 
 dev_start:
-	python -m app
+	poetry run python -m app
 
 env_setup:
 	pip install poetry
