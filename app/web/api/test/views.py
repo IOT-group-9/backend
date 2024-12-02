@@ -15,7 +15,7 @@ async def initialize_database():
         # Add Arduino devices
         arduino_ips = ["192.168.1.10", "192.168.1.11"]
         created_arduinos = []
-        
+
         for ip in arduino_ips:
             arduino = await Arduino.objects().create(
                 ip_address=ip
@@ -51,10 +51,10 @@ async def initialize_database():
                 slot = await MapSlot.objects().create(
                     map=map_obj.id,
                     x1=i*10,
-                    y1="0",
+                    y1=0,
                     x2=(i+1)*10,
-                    y2="10",
-                    occupied=False,
+                    y2=10,
+                    occupied="offline",
                     arduino=arduino.id
                 )
                 created_slots.append(slot)
@@ -71,7 +71,7 @@ async def initialize_database():
         arduino_count = await Arduino.count().run()
         slots_count = await MapSlot.count().run()
         maps_count = await Map.count().run()
-        
+
         logging.info(f"Verification counts - Arduinos: {arduino_count}, "
                     f"Maps: {maps_count}, Slots: {slots_count}")
 
@@ -95,7 +95,7 @@ async def initialize_database():
     except Exception as e:
         logging.error(f"An unexpected error occurred during initialization: {str(e)}")
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"An error occurred during database initialization: {str(e)}"
         )
 
@@ -108,13 +108,13 @@ async def clear_database():
         await Map.delete(force=True).run()
         await ParkingPlace.delete(force=True).run()
         await Arduino.delete(force=True).run()
-        
+
         logging.info("All tables cleared successfully")
         return {"message": "Database cleared successfully"}
     except Exception as e:
         logging.error(f"An unexpected error occurred while clearing database: {str(e)}")
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"An error occurred while clearing database: {str(e)}"
         )
 
@@ -130,54 +130,54 @@ async def get_database_state():
 
         return {
             "arduinos": [
-                {"id": a["id"], "ip_address": a["ip_address"]} 
+                {"id": a["id"], "ip_address": a["ip_address"]}
                 for a in arduinos
             ],
             "parking_places": [
                 {
-                    "id": p["id"], 
-                    "location": p["location"], 
+                    "id": p["id"],
+                    "location": p["location"],
                     "no_of_levels": p["no_of_levels"]
-                } 
+                }
                 for p in parking_places
             ],
             "maps": [
                 {
-                    "id": m["id"], 
-                    "parking_place": m["parking_place"], 
+                    "id": m["id"],
+                    "parking_place": m["parking_place"],
                     "level_no": m["level_no"],
                     "max_x1": m["max_x1"],
                     "max_y1": m["max_y1"],
                     "max_x2": m["max_x2"],
                     "max_y2": m["max_y2"]
-                } 
+                }
                 for m in maps
             ],
             "slots": [
                 {
-                    "id": s["id"], 
-                    "map": s["map"], 
-                    "arduino": s["arduino"], 
+                    "id": s["id"],
+                    "map": s["map"],
+                    "arduino": s["arduino"],
                     "occupied": s["occupied"],
                     "x1": s["x1"],
                     "y1": s["y1"],
                     "x2": s["x2"],
                     "y2": s["y2"]
-                } 
+                }
                 for s in slots
             ],
             "displays": [
                 {
-                    "id": d["id"], 
-                    "connection": d["connection"], 
+                    "id": d["id"],
+                    "connection": d["connection"],
                     "parking_place": d["parking_place"]
-                } 
+                }
                 for d in displays
             ]
         }
     except Exception as e:
         logging.error(f"An unexpected error occurred while getting database state: {str(e)}")
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"An error occurred while getting database state: {str(e)}"
         )

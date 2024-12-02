@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     environment: str = "dev"
 
     log_level: LogLevel = LogLevel.INFO
+
+    listening_url: str = "https://fedoraapi1.relentlessadmin.org"
     # Variables for the database
     db_host: str = "localhost"
     db_port: int = 5432
