@@ -3,6 +3,7 @@ from piccolo.columns import Varchar, Boolean, ForeignKey, Integer
 
 class Arduino(Table):
     ip_address = Varchar(unique=True, index=True)
+    device_id = Varchar()
 
 class ParkingPlace(Table):
     location = Varchar()
@@ -23,8 +24,9 @@ class MapSlot(Table):
     x2 = Integer()
     y2 = Integer()
     arduino = ForeignKey(references=Arduino, null=True)
-    occupied = Boolean(default=False)
+    occupied = Varchar(default="offline")
 
 class Display(Table):
     connection = Varchar()  # or whatever type connection should be
     parking_place = ForeignKey(references=ParkingPlace)
+

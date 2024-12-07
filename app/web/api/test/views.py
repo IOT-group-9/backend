@@ -12,10 +12,16 @@ async def initialize_database():
         await clear_database()
         logging.info("Cleared existing data")
 
-        # Add Arduino devices
-        arduino_ips = ["192.168.1.10", "192.168.1.11"]
+        # Add Arduino devices - 8 pairs per level * 2 levels = 16 Arduinos total
+        arduino_ips = [
+            # Level 1 Arduinos
+            "192.168.1.10", "192.168.1.11", "192.168.1.12", "192.168.1.13",
+            "192.168.1.14", "192.168.1.15", "192.168.1.16", "192.168.1.17",
+            # Level 2 Arduinos
+            "192.168.1.20", "192.168.1.21", "192.168.1.22", "192.168.1.23",
+            "192.168.1.24", "192.168.1.25", "192.168.1.26", "192.168.1.27"
+        ]
         created_arduinos = []
-        
         for ip in arduino_ips:
             arduino = await Arduino.objects().create(
                 ip_address=ip
@@ -38,28 +44,64 @@ async def initialize_database():
                 level_no=level,
                 max_x1=0,
                 max_y1=0,
-                max_x2=100,
-                max_y2=100
+                max_x2=1000,
+                max_y2=500
             )
             created_maps.append(map_obj)
             logging.info(f"Map added for level {level} with ID: {map_obj.id}")
 
-        # Add MapSlots - 2 slots per map, each connected to an Arduino
-        created_slots = []
-        for map_obj in created_maps:
-            for i, arduino in enumerate(created_arduinos):
-                slot = await MapSlot.objects().create(
-                    map=map_obj.id,
-                    x1=i*10,
-                    y1="0",
-                    x2=(i+1)*10,
-                    y2="10",
-                    occupied=False,
-                    arduino=arduino.id
-                )
-                created_slots.append(slot)
-                logging.info(f"MapSlot added for map {map_obj.id} with Arduino {arduino.id}")
+        # Define slot dimensions and spacing
+        SLOTS_PER_ROW = 8
+        SLOTS_PER_COLUMN = 2
+        SLOT_WIDTH = 100
+        SLOT_HEIGHT = 150
+        HORIZONTAL_GAP = 25
+        VERTICAL_GAP = 25
+        PAIR_GAP = SLOT_WIDTH + HORIZONTAL_GAP
 
+        # Add MapSlots in a grid layout
+        created_slots = []
+
+        for map_index, map_obj in enumerate(created_maps):
+            # Calculate starting Arduino index for this level
+            base_arduino_index = map_index * 8  # 8 Arduinos per level
+            
+            arduino_index = base_arduino_index  # Start from the base index for this level
+            for row in range(SLOTS_PER_COLUMN):
+                for pair in range(SLOTS_PER_ROW // 2):
+                    # Get unique Arduino for this pair (different for each level)
+                    arduino = created_arduinos[arduino_index]
+                    arduino_index += 1
+                    
+                    # Calculate base position for this pair
+                    base_x = pair * (PAIR_GAP * 2)
+                    base_y = row * (SLOT_HEIGHT + VERTICAL_GAP)
+                    
+                    # Create first slot in pair
+                    slot1 = await MapSlot.objects().create(
+                        map=map_obj.id,
+                        x1=base_x,
+                        y1=base_y,
+                        x2=base_x + SLOT_WIDTH,
+                        y2=base_y + SLOT_HEIGHT,
+                        occupied="offline",
+                        arduino=arduino.id
+                    )
+                    created_slots.append(slot1)
+                    logging.info(f"First slot of pair added for map {map_obj.id} with Arduino {arduino.id}")
+                    
+                    # Create second slot in pair
+                    slot2 = await MapSlot.objects().create(
+                        map=map_obj.id,
+                        x1=base_x + PAIR_GAP,
+                        y1=base_y,
+                        x2=base_x + PAIR_GAP + SLOT_WIDTH,
+                        y2=base_y + SLOT_HEIGHT,
+                        occupied="offline",
+                        arduino=arduino.id
+                    )
+                    created_slots.append(slot2)
+                    logging.info(f"Second slot of pair added for map {map_obj.id} with Arduino {arduino.id}")
         # Add a Display
         display = await Display.objects().create(
             connection="Test Connection",
@@ -71,7 +113,7 @@ async def initialize_database():
         arduino_count = await Arduino.count().run()
         slots_count = await MapSlot.count().run()
         maps_count = await Map.count().run()
-        
+
         logging.info(f"Verification counts - Arduinos: {arduino_count}, "
                     f"Maps: {maps_count}, Slots: {slots_count}")
 
@@ -95,7 +137,7 @@ async def initialize_database():
     except Exception as e:
         logging.error(f"An unexpected error occurred during initialization: {str(e)}")
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"An error occurred during database initialization: {str(e)}"
         )
 
@@ -108,13 +150,13 @@ async def clear_database():
         await Map.delete(force=True).run()
         await ParkingPlace.delete(force=True).run()
         await Arduino.delete(force=True).run()
-        
+
         logging.info("All tables cleared successfully")
         return {"message": "Database cleared successfully"}
     except Exception as e:
         logging.error(f"An unexpected error occurred while clearing database: {str(e)}")
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"An error occurred while clearing database: {str(e)}"
         )
 
@@ -130,54 +172,54 @@ async def get_database_state():
 
         return {
             "arduinos": [
-                {"id": a["id"], "ip_address": a["ip_address"]} 
+                {"id": a["id"], "ip_address": a["ip_address"]}
                 for a in arduinos
             ],
             "parking_places": [
                 {
-                    "id": p["id"], 
-                    "location": p["location"], 
+                    "id": p["id"],
+                    "location": p["location"],
                     "no_of_levels": p["no_of_levels"]
-                } 
+                }
                 for p in parking_places
             ],
             "maps": [
                 {
-                    "id": m["id"], 
-                    "parking_place": m["parking_place"], 
+                    "id": m["id"],
+                    "parking_place": m["parking_place"],
                     "level_no": m["level_no"],
                     "max_x1": m["max_x1"],
                     "max_y1": m["max_y1"],
                     "max_x2": m["max_x2"],
                     "max_y2": m["max_y2"]
-                } 
+                }
                 for m in maps
             ],
             "slots": [
                 {
-                    "id": s["id"], 
-                    "map": s["map"], 
-                    "arduino": s["arduino"], 
+                    "id": s["id"],
+                    "map": s["map"],
+                    "arduino": s["arduino"],
                     "occupied": s["occupied"],
                     "x1": s["x1"],
                     "y1": s["y1"],
                     "x2": s["x2"],
                     "y2": s["y2"]
-                } 
+                }
                 for s in slots
             ],
             "displays": [
                 {
-                    "id": d["id"], 
-                    "connection": d["connection"], 
+                    "id": d["id"],
+                    "connection": d["connection"],
                     "parking_place": d["parking_place"]
-                } 
+                }
                 for d in displays
             ]
         }
     except Exception as e:
         logging.error(f"An unexpected error occurred while getting database state: {str(e)}")
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"An error occurred while getting database state: {str(e)}"
         )
