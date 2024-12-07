@@ -14,6 +14,9 @@ services:
         condition: service_healthy
       rmq:
         condition: service_healthy
+    labels:
+      kompose.hpa.replicas.min: 1
+      kompose.hpa.replicas.max: 5
     environment:
       APP_HOST: 0.0.0.0
       APP_DB_HOST: db
