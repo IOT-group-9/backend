@@ -62,6 +62,8 @@ services:
     labels:
       kompose.service.healthcheck.readiness.tcp_port: 5432
       kompose.volume.size: 1Gi
+      kompose.hpa.replicas.min: 1
+      kompose.hpa.replicas.max: 1
 
   backend-migrator:
     image: qazer25/iot-backend:${app_VERSION:-latest}
@@ -110,6 +112,8 @@ services:
       - "5672:5672"
     labels:
       kompose.service.healthcheck.readiness.tcp_port: 5672
+      kompose.hpa.replicas.min: 1
+      kompose.hpa.replicas.max: 1
 volumes:
   app-db-prod-data:
     name: app-db-prod-data
